@@ -1,0 +1,25 @@
+
+<?xml version="1.0" encoding="utf-8"?>
+<jnlp spec="1.0+" codebase="http://localhost:8080/">
+   <information> 
+      <title>Servoy Client - Servoy Sample CRM</title>
+      <vendor>Servoy</vendor>
+      <homepage href="http://www.servoy.com/"/>
+      <description>Database client</description>
+      <icon href="lib/images/servoy_client_icon.png" />
+      <icon kind="splash" href="lib/splashclient.png" width="64" height="64"/>
+      <shortcut online="false">
+      <desktop/>
+    </shortcut>
+   </information>
+   <resources>
+      <j2se version="1.8"   java-vm-args="-XX:SoftRefLRUPolicyMSPerMB=3600000" />
+      <jar href="bootstrap.jar" main="true" version="13" download="eager"/>
+   </resources>
+   <application-desc main-class="com.servoy.bootstrapper.Bootstrap">
+      <argument>servoy_sample_crm</argument>
+	</application-desc>
+	<security>
+   	<all-permissions/>
+	</security>
+</jnlp>
