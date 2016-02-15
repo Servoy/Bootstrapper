@@ -158,7 +158,7 @@ public class Bootstrap {
 			Thread.currentThread().setContextClassLoader(classloader);
 			Class<?> clz = Class.forName("com.servoy.j2db.smart.J2DBClient", true, classloader);
 			Method method = clz.getMethod("main", String[].class);
-			method.invoke(null, new Object[] { getArguments(serverContent.toString()) });
+			method.invoke(null, new Object[] { getArguments(serverContent.toString(),args) });
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -190,16 +190,19 @@ public class Bootstrap {
 		}
 	}
 
-	static String[] getArguments(String contents) throws SAXException, IOException, ParserConfigurationException {
+	static String[] getArguments(String contents, String[] args) throws SAXException, IOException, ParserConfigurationException {
 		DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
 		DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder();
 		Document doc = docBuilder.parse(new InputSource(new StringReader(contents)));
 		NodeList argumentsList = doc.getElementsByTagName("argument");
-		String[] arguments = new String[argumentsList.getLength()];
+		ArrayList<String> arguments = new ArrayList<>();
 		for (int i = 0; i < argumentsList.getLength(); i++) {
-			arguments[i] = argumentsList.item(i).getTextContent();
+			arguments.add(argumentsList.item(i).getTextContent());
 		}
-		return arguments;
+		for(int i=1;i<args.length;i++) {
+			arguments.add(args[i]);
+		}
+		return arguments.toArray(new String[arguments.size()]);
 	}
 
 	static void listFiles(final File root, final List<File> files) {
