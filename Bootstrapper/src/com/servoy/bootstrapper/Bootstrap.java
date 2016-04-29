@@ -84,9 +84,9 @@ public class Bootstrap {
 				fr.close();
 			}
 			int index = serverContent.indexOf("<resources>");
-			int index2 = serverContent.indexOf("</resources>");
+			int index2 = serverContent.lastIndexOf("</resources>");
 			int index3 = clientContent.indexOf("<resources>");
-			int index4 = clientContent.indexOf("</resources>");
+			int index4 = clientContent.lastIndexOf("</resources>");
 			isSame = serverContent.substring(index, index2).equals(clientContent.substring(index3, index4));
 		} else {
 			libCacheDir.mkdirs();
