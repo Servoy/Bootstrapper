@@ -14,10 +14,11 @@
    </information>
    <resources>
       <j2se version="1.8"   java-vm-args="-XX:SoftRefLRUPolicyMSPerMB=3600000" />
-      <jar href="bootstrap.jar" main="true" version="13" download="eager"/>
+      <jar href="bootstrap.jar" main="true" version="14" download="eager"/>
    </resources>
    <application-desc main-class="com.servoy.bootstrapper.Bootstrap">
       <argument>servoy_sample_crm</argument>
+      <argument>1</argument>
 	</application-desc>
 	<security>
    	<all-permissions/>

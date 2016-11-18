@@ -43,6 +43,20 @@ public class Bootstrap {
 																			// args
 																			// else
 																			// default.
+		int threadPoolSize = 8;
+		if (args.length > 1)
+		{
+			try
+			{
+				//check if the last argument is a number
+				int val = Integer.parseInt(args[args.length-1]);
+				if (val > 0) threadPoolSize = val;
+			}
+			catch (NumberFormatException e)
+			{
+				//ignore, the last argument is not the theadPoolSize
+			}
+		}
 		System.setSecurityManager(null);
 		javax.jnlp.BasicService bs = (javax.jnlp.BasicService) javax.jnlp.ServiceManager
 				.lookup("javax.jnlp.BasicService"); //$NON-NLS-1$
@@ -115,7 +129,7 @@ public class Bootstrap {
 			// back
 			// Pack200 resets this to UTC when used multi threaded.
 			TimeZone currentTimeZone = TimeZone.getDefault();
-			ThreadPoolExecutor threadPool = new ThreadPoolExecutor(4, 8, 10, TimeUnit.SECONDS,
+			ThreadPoolExecutor threadPool = new ThreadPoolExecutor(threadPoolSize > 1 ? threadPoolSize/2 : 1 , threadPoolSize, 10, TimeUnit.SECONDS,
 					new LinkedBlockingQueue<Runnable>());
 			threadPool.execute(new JNLPParser(jnlpUrl, threadPool, codeBaseUrl, libCacheDir, bar));
 			do {
