@@ -218,8 +218,10 @@ public class Bootstrap {
 				return upperCase.endsWith("JAR") || upperCase.endsWith("ZIP");
 			}
 		});
-		for (File file : listed) {
-			files.add(file);
+		if (listed != null) {
+			for (File file : listed) {
+				files.add(file);
+			}
 		}
 	}
 
