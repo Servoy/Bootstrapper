@@ -36,27 +36,15 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 public class Bootstrap {
-
+	
+	static final String THREAD_POOL_SIZE_NAME = "bootstrapthreadpoolsize:";
+	
 	public static void main(String[] args) throws UnavailableServiceException, IOException, URISyntaxException {
 		String solutionName = args.length > 0 ? args[0] : "servoy_client"; // coming
 																			// from
 																			// args
 																			// else
 																			// default.
-		int threadPoolSize = 8;
-		if (args.length > 1)
-		{
-			try
-			{
-				//check if the last argument is a number
-				int val = Integer.parseInt(args[args.length-1]);
-				if (val > 0) threadPoolSize = val;
-			}
-			catch (NumberFormatException e)
-			{
-				//ignore, the last argument is not the theadPoolSize
-			}
-		}
 		System.setSecurityManager(null);
 		javax.jnlp.BasicService bs = (javax.jnlp.BasicService) javax.jnlp.ServiceManager
 				.lookup("javax.jnlp.BasicService"); //$NON-NLS-1$
@@ -129,6 +117,7 @@ public class Bootstrap {
 			// back
 			// Pack200 resets this to UTC when used multi threaded.
 			TimeZone currentTimeZone = TimeZone.getDefault();
+			int threadPoolSize = getThreadPoolSize(args);
 			ThreadPoolExecutor threadPool = new ThreadPoolExecutor(threadPoolSize > 1 ? threadPoolSize/2 : 1 , threadPoolSize, 10, TimeUnit.SECONDS,
 					new LinkedBlockingQueue<Runnable>());
 			threadPool.execute(new JNLPParser(jnlpUrl, threadPool, codeBaseUrl, libCacheDir, bar));
@@ -204,6 +193,25 @@ public class Bootstrap {
 		}
 	}
 
+	private static int getThreadPoolSize(String[] args) {
+		for(int i=1;i<args.length;i++) {
+			if(args[i].startsWith(THREAD_POOL_SIZE_NAME)){
+				try
+				{
+					int val = Integer.parseInt(args[i].substring(THREAD_POOL_SIZE_NAME.length()));
+					if (val > 0) return val;
+					System.out.println("Thread pool size must be a positive number, using default value: 8.");
+				}
+				catch (NumberFormatException e)
+				{
+					System.out.println("Thread pool size argument is not a number, using default value: 8.");
+				}
+			}
+			
+		}
+		return 8;
+	}
+
 	static String[] getArguments(String contents, String[] args) throws SAXException, IOException, ParserConfigurationException {
 		DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
 		DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder();
@@ -211,9 +219,12 @@ public class Bootstrap {
 		NodeList argumentsList = doc.getElementsByTagName("argument");
 		ArrayList<String> arguments = new ArrayList<>();
 		for (int i = 0; i < argumentsList.getLength(); i++) {
-			arguments.add(argumentsList.item(i).getTextContent());
+			String textContent = argumentsList.item(i).getTextContent();
+			if(textContent.startsWith(THREAD_POOL_SIZE_NAME)) continue;
+			arguments.add(textContent);
 		}
 		for(int i=1;i<args.length;i++) {
+			if(args[i].startsWith(THREAD_POOL_SIZE_NAME)) continue;
 			arguments.add(args[i]);
 		}
 		return arguments.toArray(new String[arguments.size()]);

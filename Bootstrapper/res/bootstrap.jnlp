@@ -18,7 +18,7 @@
    </resources>
    <application-desc main-class="com.servoy.bootstrapper.Bootstrap">
       <argument>servoy_sample_crm</argument>
-      <argument>1</argument>
+      <argument>bootstrapthreadpoolsize:8</argument>
 	</application-desc>
 	<security>
    	<all-permissions/>
