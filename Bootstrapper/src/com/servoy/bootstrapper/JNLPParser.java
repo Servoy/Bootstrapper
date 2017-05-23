@@ -43,19 +43,50 @@ public class JNLPParser implements Runnable {
 	@Override
 	public void run() {
 
+		InputStreamReader isr = null;
+		Document jnlpDoc = null;
+		int downloadCounter = 0;
 		try {
-			InputStream inputStream = url.openConnection().getInputStream();
-			InputStreamReader isr = new InputStreamReader(inputStream);
-			DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
-			DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder();
-			Document jnlpDoc = docBuilder.parse(new InputSource(isr));
-
+			while (downloadCounter < 5) {
+				try {
+					InputStream inputStream = url.openConnection().getInputStream();
+					isr = new InputStreamReader(inputStream);
+					DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
+					DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder();
+					jnlpDoc = docBuilder.parse(new InputSource(isr));
+					try {
+						isr.close();
+						isr = null;
+					} catch (Exception e) {
+					}
+					downloadCounter = 5;
+				} catch (Exception e) {
+					e.printStackTrace();
+					downloadCounter++;
+					if (downloadCounter < 5) {
+						try {
+							System.err.println("trying to download again: " + url);
+							Thread.sleep(2000*downloadCounter);
+						} catch (InterruptedException e1) {
+							e1.printStackTrace();
+						}
+					}
+					else {
+						System.err.println("After 5 download tries this url failed to download, contact server adminstrator: " + url);
+					}
+				} finally {
+					if (isr != null)
+						try {
+							isr.close();
+						} catch (Exception e) {
+						}
+				}
+			}
 			NodeList childNodes = jnlpDoc.getChildNodes();
 			parseJNLP(childNodes);
-		} catch (Exception e) {
+		} catch (MalformedURLException e) {
 			e.printStackTrace();
-		}
-		finally {
+		} finally {
 			Bootstrap.increaseProgress(bar);
 		}
 	}
@@ -72,10 +103,11 @@ public class JNLPParser implements Runnable {
 				Node href = attributes.getNamedItem("href");
 				if (href != null) {
 					if (node.getNodeName().equalsIgnoreCase("jar") || node.getNodeName().equalsIgnoreCase("zip")) {
-						threadPool.execute(new JarDownloader(new URL(codeBase, href.getNodeValue()), solutionCacheDir, bar));
+						threadPool.execute(
+								new JarDownloader(new URL(codeBase, href.getNodeValue()), solutionCacheDir, bar));
 					} else if (node.getNodeName().equalsIgnoreCase("extension")) {
 						threadPool.execute(new JNLPParser(new URL(codeBase, href.getNodeValue()), threadPool, codeBase,
-								solutionCacheDir,bar));
+								solutionCacheDir, bar));
 					}
 				}
 			}
@@ -91,9 +123,11 @@ public class JNLPParser implements Runnable {
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
-				System.err.println("skipping resource node that is os/architecture specific, should be added to bootstrap.jnlp:\n" + buffer);
-			}
-			else parseJNLP(node.getChildNodes());
+				System.err.println(
+						"skipping resource node that is os/architecture specific, should be added to bootstrap.jnlp:\n"
+								+ buffer);
+			} else
+				parseJNLP(node.getChildNodes());
 		}
 	}
 
