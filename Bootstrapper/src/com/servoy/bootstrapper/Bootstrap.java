@@ -36,9 +36,9 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 public class Bootstrap {
-	
+
 	static final String THREAD_POOL_SIZE_NAME = "bootstrapthreadpoolsize:";
-	
+
 	public static void main(String[] args) throws UnavailableServiceException, IOException, URISyntaxException {
 		String solutionName = args.length > 0 ? args[0] : "servoy_client"; // coming
 																			// from
@@ -89,7 +89,8 @@ public class Bootstrap {
 			int index2 = serverContent.lastIndexOf("</resources>");
 			int index3 = clientContent.indexOf("<resources>");
 			int index4 = clientContent.lastIndexOf("</resources>");
-			isSame = index > 0 && index2 > 0 && index3 > 0 && index4 > 0 && serverContent.substring(index, index2).equals(clientContent.substring(index3, index4));
+			isSame = index > 0 && index2 > 0 && index3 > 0 && index4 > 0
+					&& serverContent.substring(index, index2).equals(clientContent.substring(index3, index4));
 		} else {
 			libCacheDir.mkdirs();
 		}
@@ -118,8 +119,8 @@ public class Bootstrap {
 			// Pack200 resets this to UTC when used multi threaded.
 			TimeZone currentTimeZone = TimeZone.getDefault();
 			int threadPoolSize = getThreadPoolSize(args);
-			ThreadPoolExecutor threadPool = new ThreadPoolExecutor(threadPoolSize > 1 ? threadPoolSize/2 : 1 , threadPoolSize, 10, TimeUnit.SECONDS,
-					new LinkedBlockingQueue<Runnable>());
+			ThreadPoolExecutor threadPool = new ThreadPoolExecutor(threadPoolSize > 1 ? threadPoolSize / 2 : 1,
+					threadPoolSize, 10, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
 			threadPool.execute(new JNLPParser(jnlpUrl, threadPool, codeBaseUrl, libCacheDir, bar));
 			do {
 				try {
@@ -155,25 +156,29 @@ public class Bootstrap {
 		// replace all thread context classloader with the new url one
 		Map<Thread, StackTraceElement[]> allStackTraces = Thread.getAllStackTraces();
 		for (Entry<Thread, StackTraceElement[]> stack : allStackTraces.entrySet()) {
-			stack.getKey().setContextClassLoader(classloader);
+			try {
+				stack.getKey().setContextClassLoader(classloader);
+			} catch (Throwable t) {
+				// just ignore if the context classloader can't be set for this
+				// one.
+			}
 		}
 		try {
 			Thread.currentThread().setContextClassLoader(classloader);
 			Class<?> clz = Class.forName("com.servoy.j2db.smart.J2DBClient", true, classloader);
 			Method method = clz.getMethod("main", String[].class);
-			method.invoke(null, new Object[] { getArguments(serverContent.toString(),args) });
+			method.invoke(null, new Object[] { getArguments(serverContent.toString(), args) });
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		final boolean[] contextOK = new boolean[1]; 
+		final boolean[] contextOK = new boolean[1];
 		final Runnable contextClassLoaderTester = new Runnable() {
 			@Override
 			public void run() {
 				if (Thread.currentThread().getContextClassLoader() != classloader) {
 					Thread.currentThread().setContextClassLoader(classloader);
 					contextOK[0] = false;
-				}
-				else {
+				} else {
 					contextOK[0] = true;
 				}
 			}
@@ -181,38 +186,37 @@ public class Bootstrap {
 		try {
 			SwingUtilities.invokeAndWait(contextClassLoaderTester);
 			do {
-			try {
-				Thread.sleep(1000);
-				SwingUtilities.invokeAndWait(contextClassLoaderTester);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-			} while(!contextOK[0]);
+				try {
+					Thread.sleep(1000);
+					SwingUtilities.invokeAndWait(contextClassLoaderTester);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			} while (!contextOK[0]);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
 	private static int getThreadPoolSize(String[] args) {
-		for(int i=1;i<args.length;i++) {
-			if(args[i].startsWith(THREAD_POOL_SIZE_NAME)){
-				try
-				{
+		for (int i = 1; i < args.length; i++) {
+			if (args[i].startsWith(THREAD_POOL_SIZE_NAME)) {
+				try {
 					int val = Integer.parseInt(args[i].substring(THREAD_POOL_SIZE_NAME.length()));
-					if (val > 0) return val;
+					if (val > 0)
+						return val;
 					System.out.println("Thread pool size must be a positive number, using default value: 8.");
-				}
-				catch (NumberFormatException e)
-				{
+				} catch (NumberFormatException e) {
 					System.out.println("Thread pool size argument is not a number, using default value: 8.");
 				}
 			}
-			
+
 		}
 		return 8;
 	}
 
-	static String[] getArguments(String contents, String[] args) throws SAXException, IOException, ParserConfigurationException {
+	static String[] getArguments(String contents, String[] args)
+			throws SAXException, IOException, ParserConfigurationException {
 		DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
 		DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder();
 		Document doc = docBuilder.parse(new InputSource(new StringReader(contents)));
@@ -220,11 +224,13 @@ public class Bootstrap {
 		ArrayList<String> arguments = new ArrayList<>();
 		for (int i = 0; i < argumentsList.getLength(); i++) {
 			String textContent = argumentsList.item(i).getTextContent();
-			if(textContent.startsWith(THREAD_POOL_SIZE_NAME)) continue;
+			if (textContent.startsWith(THREAD_POOL_SIZE_NAME))
+				continue;
 			arguments.add(textContent);
 		}
-		for(int i=1;i<args.length;i++) {
-			if(args[i].startsWith(THREAD_POOL_SIZE_NAME)) continue;
+		for (int i = 1; i < args.length; i++) {
+			if (args[i].startsWith(THREAD_POOL_SIZE_NAME))
+				continue;
 			arguments.add(args[i]);
 		}
 		return arguments.toArray(new String[arguments.size()]);
