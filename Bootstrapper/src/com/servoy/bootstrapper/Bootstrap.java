@@ -72,7 +72,15 @@ public class Bootstrap {
 		StringBuilder clientContent = new StringBuilder();
 		// load from cache
 		String cacheName = (codeBaseUrl.getHost() + codeBaseUrl.getPort()).replace('.', '_');
-		File libCacheDir = new File(System.getProperty("user.home"), ".servoy/libCache/" + cacheName + "/"); //$NON-NLS-1$
+		String libCacheProperty = System.getProperty("jnlp.bootstrapper.home.dir");
+		File libCacheDir = null;
+		if (libCacheProperty != null) {
+			libCacheDir = new File(libCacheProperty, "libCache/" + cacheName + "/"); //$NON-NLS-1$
+		}
+		else {
+			libCacheDir = new File(System.getProperty("user.home"), ".servoy/libCache/" + cacheName + "/"); //$NON-NLS-1$
+		}
+		System.out.println("storing the cache in " + libCacheDir + " (" + libCacheProperty + ")");
 		File mainJNLP = new File(libCacheDir, "main.jnlp");
 		if (libCacheDir.exists() && mainJNLP.exists()) {
 			FileReader fr = new FileReader(mainJNLP);
