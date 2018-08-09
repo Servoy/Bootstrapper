@@ -37,7 +37,7 @@ public class JNLPParser implements Runnable {
 		this.codeBase = codeBase;
 		this.solutionCacheDir = solutionCacheDir;
 		this.bar = bar;
-		Bootstrap.increaseMaximum(bar);
+		BaseBootstrap.increaseMaximum(bar);
 	}
 
 	@Override
@@ -87,7 +87,7 @@ public class JNLPParser implements Runnable {
 		} catch (MalformedURLException e) {
 			e.printStackTrace();
 		} finally {
-			Bootstrap.increaseProgress(bar);
+			BaseBootstrap.increaseProgress(bar);
 		}
 	}
 
