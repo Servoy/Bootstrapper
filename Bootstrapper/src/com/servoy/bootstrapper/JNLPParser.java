@@ -108,26 +108,32 @@ public class JNLPParser implements Runnable {
 					} else if (node.getNodeName().equalsIgnoreCase("extension")) {
 						threadPool.execute(new JNLPParser(new URL(codeBase, href.getNodeValue()), threadPool, codeBase,
 								solutionCacheDir, bar));
+					} else if (node.getNodeName().equalsIgnoreCase("nativelib")) {
+						threadPool.execute(
+								new NativeLibDownloader(new URL(codeBase, href.getNodeValue()), solutionCacheDir, bar));
 					}
 				}
 			}
+			boolean parseChildNodes = true;
 			if ("resources".equals(node.getNodeName()) && node.getAttributes() != null
 					&& (node.getAttributes().getNamedItem("os") != null
 							|| node.getAttributes().getNamedItem("arch") != null)) {
-				StringWriter buffer = new StringWriter();
-				try {
-					TransformerFactory transFactory = TransformerFactory.newInstance();
-					Transformer transformer = transFactory.newTransformer();
-					transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
-					transformer.transform(new DOMSource(node), new StreamResult(buffer));
-				} catch (Exception e) {
-					e.printStackTrace();
+				String os = node.getAttributes().getNamedItem("os").getNodeValue();
+				if (os != null) {
+					String currentOs = System.getProperty("os.name");
+					parseChildNodes = os.contains(currentOs) || currentOs.contains(os);
 				}
-				System.err.println(
-						"skipping resource node that is os/architecture specific, should be added to bootstrap.jnlp:\n"
-								+ buffer);
-			} else
+				if (parseChildNodes) {
+					String arch = node.getAttributes().getNamedItem("arch").getNodeValue();
+					if (arch != null) {
+						String currentArch= System.getProperty("os.arch");
+						parseChildNodes = arch.contains(currentArch) || currentArch.contains(arch);
+					}
+				}
+			} 
+			if (parseChildNodes) {
 				parseJNLP(node.getChildNodes());
+			}
 		}
 	}
 

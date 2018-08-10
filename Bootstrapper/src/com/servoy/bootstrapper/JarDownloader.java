@@ -14,9 +14,9 @@ import javax.swing.JProgressBar;
 
 public class JarDownloader implements Runnable {
 
-	private final URL url;
-	private final File solutionCacheDir;
-	private final JProgressBar bar;
+	protected final URL url;
+	protected final File solutionCacheDir;
+	protected final JProgressBar bar;
 
 	public JarDownloader(URL url, File solutionCacheDir, JProgressBar bar) {
 		this.url = url;

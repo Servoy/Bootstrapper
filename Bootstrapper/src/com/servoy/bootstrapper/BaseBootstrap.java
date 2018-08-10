@@ -75,7 +75,7 @@ public class BaseBootstrap {
 		// load from cache
 		String cacheName = (codeBaseUrl.getHost() + codeBaseUrl.getPort()).replace('.', '_');
 		String libCacheProperty = System.getProperty("jnlp.bootstrapper.home.dir");
-		File libCacheDir = null;
+		final File libCacheDir;
 		if (libCacheProperty != null) {
 			libCacheDir = new File(libCacheProperty, "libCache/" + cacheName + "/"); //$NON-NLS-1$
 		} else {
@@ -159,7 +159,19 @@ public class BaseBootstrap {
 		}
 
 		ClassLoader webstartClassLoader = BaseBootstrap.class.getClassLoader();
-		final URLClassLoader classloader = new URLClassLoader(urls.toArray(new URL[urls.size()]), webstartClassLoader);
+		final URLClassLoader classloader = new URLClassLoader(urls.toArray(new URL[urls.size()]), webstartClassLoader) {
+			protected String findLibrary(String libname) {
+				 String mapLibraryName = System.mapLibraryName(libname);
+				 File lib = new File(libCacheDir, mapLibraryName);
+				 if (lib.exists())
+					try {
+						return lib.getCanonicalPath();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				 return null;
+			}
+		};
 
 		// replace all thread context classloader with the new url one
 		Map<Thread, StackTraceElement[]> allStackTraces = Thread.getAllStackTraces();
