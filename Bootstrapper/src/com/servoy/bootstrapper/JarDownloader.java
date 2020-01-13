@@ -38,7 +38,11 @@ public class JarDownloader implements Runnable {
 					os = new FileOutputStream(file);
 
 					URLConnection connection = url.openConnection();
-					connection.addRequestProperty("accept-encoding", "pack200-gzip");
+					if (Pack200Wrapper.isPack200Loaded()) {
+						connection.addRequestProperty("accept-encoding", "pack200-gzip");
+					} else {
+						connection.addRequestProperty("accept-encoding", "gzip");
+					}
 					connection.addRequestProperty("content-type", "application/x-java-archive");
 					inputStream = connection.getInputStream();
 
@@ -47,7 +51,8 @@ public class JarDownloader implements Runnable {
 						os = new JarOutputStream(os);
 						((JarOutputStream) os).setLevel(0);
 						inputStream = new GZIPInputStream(inputStream);
-						Pack200.newUnpacker().unpack(inputStream, ((JarOutputStream) os));
+						// Pack200 should be supported now because the server should not send back Pack200 files if we didn't send that accept encoding.
+						Pack200Wrapper.unpack(inputStream,os);
 					} else {
 						if (connection.getContentEncoding() != null
 								&& connection.getContentEncoding().indexOf("gzip") != -1) {
