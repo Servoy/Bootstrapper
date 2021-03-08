@@ -231,7 +231,7 @@ public class BaseBootstrap {
 				continue;
 			arguments.add(textContent);
 		}
-		for (int i = 1; i < args.length; i++) {
+		for (int i = 0; i < args.length; i++) {
 			if (args[i].startsWith(THREAD_POOL_SIZE_NAME))
 				continue;
 			arguments.add(args[i]);
